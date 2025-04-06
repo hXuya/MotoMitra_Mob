@@ -92,4 +92,40 @@ class AuthService {
   static Future<void> logout() async {
     await _storage.delete(key: 'token');
   }
+
+  // Change Password
+  static Future<Map<String, dynamic>> changePassword({
+    required String oldPassword,
+    required String newPassword,
+    required String confirmPassword,
+  }) async {
+    try {
+      final token = await getToken();
+      if (token == null) {
+        return {'status': 401, 'msg': 'Unauthorized: Token not found'};
+      }
+
+      final response = await http.put(
+        Uri.parse('$baseUrl/api/user/change-password'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $token',
+        },
+        body: jsonEncode({
+          'oldPassword': oldPassword,
+          'newPassword': newPassword,
+          'confirmPassword': confirmPassword,
+        }),
+      );
+
+      final data = jsonDecode(response.body);
+
+      return {
+        'status': response.statusCode,
+        'msg': data['msg'] ?? 'Unknown response',
+      };
+    } catch (e) {
+      return {'status': 500, 'msg': 'Server error: ${e.toString()}'};
+    }
+  }
 }

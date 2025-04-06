@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:moto_mitra/screens/accounts_setting_screen.dart';
 
 class HomeScreen extends StatelessWidget {
   @override
@@ -30,7 +31,15 @@ class HomeScreen extends StatelessWidget {
           ),
           IconButton(
             icon: Icon(Icons.person_outline, color: Color(0xFFE15E3B)),
-            onPressed: () {},
+            onPressed: () {
+              Navigator.pushReplacement(
+                context,
+                MaterialPageRoute(
+                  builder: (context) =>
+                      const AccountSettingsScreen(userName: ''),
+                ),
+              );
+            },
           ),
         ],
       ),
@@ -44,7 +53,7 @@ class HomeScreen extends StatelessWidget {
                 Icon(Icons.location_on, color: Color(0xFFE15E3B)),
                 SizedBox(width: 4),
                 Text(
-                  'Loktantrik Chowk, Tarkeshwor , Kathmandu',
+                  'Loktantrik Chowk, Tarkeshwor',
                   style:
                       GoogleFonts.poppins(fontSize: 14, color: Colors.black87),
                 ),
