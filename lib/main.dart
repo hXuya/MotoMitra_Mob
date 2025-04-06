@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'screens/splash_screen.dart';
-// import 'screens/signin_screen.dart';
 import 'screens/main_screen.dart';
-// import 'screens/signup_screen.dart';
 
-void main() {
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await dotenv.load(fileName: "assets/.env");
   runApp(const MyApp());
 }
 
@@ -15,12 +16,10 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      initialRoute: '/', // Set initial route to splash screen
+      initialRoute: '/',
       routes: {
-        '/': (context) => const SplashScreen(), // Splash Screen route
-        // '/signin': (context) => const SignInScreen(), // Sign In route
-        // '/signup': (context) => const SignUpScreen(), // Sign Up route
-        '/home': (context) => HomeScreen(), // Home Screen route
+        '/': (context) => const SplashScreen(),
+        '/home': (context) => HomeScreen(),
       },
     );
   }

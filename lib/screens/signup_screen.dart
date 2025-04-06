@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:http/http.dart' as http;
 import 'signin_screen.dart';
 import 'otp_screen.dart';
@@ -12,41 +13,30 @@ class SignUpScreen extends StatefulWidget {
 }
 
 class _SignUpScreenState extends State<SignUpScreen> {
+  final String baseUrl = dotenv.env['baseurl'] ?? 'http://localhost:8000';
   bool _obscurePassword = true;
-  bool _obscureConfirmPassword = true;
 
-  final TextEditingController _nameController = TextEditingController();
-  final TextEditingController _phoneController = TextEditingController();
-  final TextEditingController _emailController = TextEditingController();
-  final TextEditingController _passwordController = TextEditingController();
-  final TextEditingController _confirmPasswordController =
-      TextEditingController();
+  final _nameController = TextEditingController();
+  final _phoneController = TextEditingController();
+  final _emailController = TextEditingController();
+  final _passwordController = TextEditingController();
 
   Future<void> _registerUser() async {
     final name = _nameController.text.trim();
     final phone = _phoneController.text.trim();
     final email = _emailController.text.trim();
     final password = _passwordController.text;
-    final confirmPassword = _confirmPasswordController.text;
-
-    if (password != confirmPassword) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Passwords do not match")),
-      );
-      return;
-    }
 
     try {
       final response = await http.post(
-        Uri.parse(
-            'http://100.64.204.28:8000/api/user/register'), // Replace with your IP and port
+        Uri.parse('$baseUrl/api/user/register'),
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({
           "username": name,
           "email": email,
           "password": password,
           "phone": phone,
-          "role": "user" // or "garage" if applicable
+          "role": "user"
         }),
       );
 
@@ -59,8 +49,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
         Navigator.push(
           context,
           MaterialPageRoute(
-            builder: (_) =>
-                OTPVerificationScreen(email: _emailController.text.trim()),
+            builder: (_) => OTPVerificationScreen(email: email),
           ),
         );
       } else {
@@ -85,17 +74,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              TextButton.icon(
-                onPressed: () => Navigator.pop(context),
-                icon: const Icon(Icons.arrow_back, color: Color(0xFFFF5E00)),
-                label: const Text(
-                  "Back",
-                  style: TextStyle(
-                    color: Color(0xFFFF5E00),
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-              ),
+              Center(child: Image.asset('assets/icons/logo.png', height: 180)),
               const SizedBox(height: 20),
               const Text(
                 'Sign Up',
@@ -106,53 +85,25 @@ class _SignUpScreenState extends State<SignUpScreen> {
                 ),
               ),
               const SizedBox(height: 30),
-              _inputField(
-                hint: 'Full Name',
-                icon: Icons.person_outline,
-                controller: _nameController,
-              ),
+              _buildInput('Full Name', Icons.person_outline, _nameController),
               const SizedBox(height: 16),
-              _inputField(
-                hint: 'Contact',
-                icon: Icons.call_outlined,
-                controller: _phoneController,
-              ),
+              _buildInput('Contact', Icons.call_outlined, _phoneController),
               const SizedBox(height: 16),
-              _inputField(
-                hint: 'Email',
-                icon: Icons.email_outlined,
-                controller: _emailController,
-              ),
+              _buildInput('Email', Icons.email_outlined, _emailController),
               const SizedBox(height: 16),
-              _inputField(
-                hint: 'Password',
-                icon: Icons.lock_outline,
-                obscureText: _obscurePassword,
-                controller: _passwordController,
+              _buildInput(
+                'Password',
+                Icons.lock_outline,
+                _passwordController,
+                obscure: _obscurePassword,
                 toggleIcon: IconButton(
                   icon: Icon(
                     _obscurePassword ? Icons.visibility_off : Icons.visibility,
                     color: const Color(0xFFE58A00),
                   ),
-                  onPressed: () =>
-                      setState(() => _obscurePassword = !_obscurePassword),
-                ),
-              ),
-              const SizedBox(height: 16),
-              _inputField(
-                hint: 'Confirm Password',
-                icon: Icons.lock_outline,
-                obscureText: _obscureConfirmPassword,
-                controller: _confirmPasswordController,
-                toggleIcon: IconButton(
-                  icon: Icon(
-                    _obscureConfirmPassword
-                        ? Icons.visibility_off
-                        : Icons.visibility,
-                    color: const Color(0xFFE58A00),
-                  ),
-                  onPressed: () => setState(
-                      () => _obscureConfirmPassword = !_obscureConfirmPassword),
+                  onPressed: () => setState(() {
+                    _obscurePassword = !_obscurePassword;
+                  }),
                 ),
               ),
               const SizedBox(height: 32),
@@ -174,16 +125,14 @@ class _SignUpScreenState extends State<SignUpScreen> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  const Text("Already have an account ? "),
+                  const Text("Already have an account? "),
                   GestureDetector(
-                    onTap: () {
-                      Navigator.pushReplacement(
-                        context,
-                        MaterialPageRoute(
-                          builder: (_) => const SignInScreen(),
-                        ),
-                      );
-                    },
+                    onTap: () => Navigator.pushReplacement(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => const SignInScreen(),
+                      ),
+                    ),
                     child: const Text(
                       "Sign In",
                       style: TextStyle(
@@ -201,16 +150,16 @@ class _SignUpScreenState extends State<SignUpScreen> {
     );
   }
 
-  Widget _inputField({
-    required String hint,
-    required IconData icon,
-    TextEditingController? controller,
-    bool obscureText = false,
+  Widget _buildInput(
+    String hint,
+    IconData icon,
+    TextEditingController controller, {
+    bool obscure = false,
     Widget? toggleIcon,
   }) {
     return TextField(
       controller: controller,
-      obscureText: obscureText,
+      obscureText: obscure,
       decoration: InputDecoration(
         hintText: hint,
         filled: true,

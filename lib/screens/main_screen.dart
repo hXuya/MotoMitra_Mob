@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:moto_mitra/screens/profile_screen.dart';
 
 class HomeScreen extends StatelessWidget {
   @override
@@ -31,12 +30,7 @@ class HomeScreen extends StatelessWidget {
           ),
           IconButton(
             icon: Icon(Icons.person_outline, color: Color(0xFFE15E3B)),
-            onPressed: () {
-              Navigator.pushReplacement(
-                context,
-                MaterialPageRoute(builder: (context) => UserProfileScreen()),
-              );
-            },
+            onPressed: () {},
           ),
         ],
       ),

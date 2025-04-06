@@ -1,6 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
-import 'signin_screen.dart'; // ✅ Import the correct renamed SignInScreen
+import 'signin_screen.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({Key? key}) : super(key: key);
@@ -13,15 +13,10 @@ class _SplashScreenState extends State<SplashScreen> {
   @override
   void initState() {
     super.initState();
-
-    // Set timer to navigate after 2 seconds
     Timer(const Duration(seconds: 2), () {
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(
-          builder: (context) =>
-              const SignInScreen(), // ✅ Navigate to SignInScreen
-        ),
+        MaterialPageRoute(builder: (_) => const SignInScreen()),
       );
     });
   }
@@ -30,21 +25,9 @@ class _SplashScreenState extends State<SplashScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       body: Container(
-        decoration: BoxDecoration(
-          color: const Color.fromRGBO(255, 246, 241, 1), // Soft background
-          borderRadius: BorderRadius.circular(0),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.grey.withOpacity(0.3),
-              spreadRadius: 2,
-              blurRadius: 5,
-              offset: const Offset(0, 3),
-            ),
-          ],
-        ),
+        color: const Color.fromRGBO(255, 246, 241, 1),
         child: Stack(
           children: [
-            // Top left circle
             Positioned(
               top: -200,
               left: -90,
@@ -57,7 +40,6 @@ class _SplashScreenState extends State<SplashScreen> {
                 ),
               ),
             ),
-            // Top right circle
             Positioned(
               top: -240,
               right: -80,
@@ -70,7 +52,6 @@ class _SplashScreenState extends State<SplashScreen> {
                 ),
               ),
             ),
-            // Bottom left circle
             Positioned(
               bottom: -200,
               left: -90,
@@ -83,7 +64,6 @@ class _SplashScreenState extends State<SplashScreen> {
                 ),
               ),
             ),
-            // Bottom right circle
             Positioned(
               bottom: -240,
               right: -80,
@@ -96,18 +76,11 @@ class _SplashScreenState extends State<SplashScreen> {
                 ),
               ),
             ),
-            // Logo center
             Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Image.asset(
-                    'assets/icons/logo.png',
-                    width: 250,
-                    height: 250,
-                  ),
-                  const SizedBox(height: 20),
-                ],
+              child: Image.asset(
+                'assets/icons/logo.png',
+                width: 250,
+                height: 250,
               ),
             ),
           ],
