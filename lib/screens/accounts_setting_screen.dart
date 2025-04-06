@@ -38,9 +38,12 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
     try {
       final response = await AuthService.getProfile();
       if (response['status'] == 200 && mounted) {
+        final userData = response['data'];
         setState(() {
-          userName = response['data']['name'];
-          userImage = response['data']['imageUrl'];
+          userName = userData['username'] ?? '';
+          userImage = userData['profileImage'] != null
+              ? '$baseUrl/${userData['profileImage']}'
+              : null;
         });
       }
     } catch (e) {
@@ -188,28 +191,29 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
               CircleAvatar(
-                radius: 50,
+                radius: 60,
                 backgroundColor: const Color(0xFFFCEFE8),
                 backgroundImage:
                     userImage != null ? NetworkImage(userImage!) : null,
                 child: userImage == null
                     ? const Icon(
                         Icons.person,
-                        size: 50,
+                        size: 60,
                         color: Color(0xFFE58A00),
                       )
                     : null,
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: 12),
               Text(
                 userName,
                 style: const TextStyle(
-                  fontSize: 24,
+                  fontSize: 28,
                   fontWeight: FontWeight.bold,
-                  color: Color(0xFF333333),
+                  color: Color(0xFFFF9900),
                 ),
               ),
               const SizedBox(height: 40),
+              // Rest of your UI remains the same
               _buildSettingOption(
                 'Profile',
                 Icons.person_outline,
@@ -217,7 +221,10 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
                   Navigator.push(
                     context,
                     MaterialPageRoute(builder: (_) => ProfileScreen()),
-                  );
+                  ).then((_) {
+                    // Refresh profile data when returning from ProfileScreen
+                    _fetchUserProfile();
+                  });
                 },
               ),
               const SizedBox(height: 16),
