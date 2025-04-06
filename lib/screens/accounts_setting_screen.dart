@@ -5,6 +5,7 @@ import 'package:moto_mitra/services/auth_service.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'signin_screen.dart';
 import 'main_screen.dart';
+import 'profile_screen.dart';
 
 class AccountSettingsScreen extends StatefulWidget {
   final String userName;
@@ -212,7 +213,12 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
               _buildSettingOption(
                 'Profile',
                 Icons.person_outline,
-                () => _navigateToSection('profile'),
+                () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => ProfileScreen()),
+                  );
+                },
               ),
               const SizedBox(height: 16),
               _buildSettingOption(

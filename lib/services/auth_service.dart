@@ -128,4 +128,96 @@ class AuthService {
       return {'status': 500, 'msg': 'Server error: ${e.toString()}'};
     }
   }
+
+  // Update profile without image
+  static Future<Map<String, dynamic>> updateProfile(
+      Map<String, String> data) async {
+    try {
+      final token = await getToken();
+      if (token == null) {
+        return {'status': 401, 'message': 'No token found'};
+      }
+
+      final response = await http.put(
+        Uri.parse('$baseUrl/api/user/updateProfile'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $token',
+        },
+        body: jsonEncode(data),
+      );
+
+      if (response.statusCode == 200) {
+        final responseData = jsonDecode(response.body);
+        return {
+          'status': 200,
+          'message': responseData['msg'],
+          'data': responseData['data'],
+        };
+      } else {
+        final errorData = jsonDecode(response.body);
+        return {
+          'status': response.statusCode,
+          'message': errorData['msg'] ?? 'Something went wrong',
+        };
+      }
+    } catch (e) {
+      print('Error: $e');
+      return {'status': 500, 'message': 'Server error'};
+    }
+  }
+
+  // Update profile with image
+  static Future<Map<String, dynamic>> updateProfileWithImage(
+    Map<String, String> data,
+    String imagePath,
+  ) async {
+    try {
+      final token = await getToken();
+      if (token == null) {
+        return {'status': 401, 'message': 'No token found'};
+      }
+
+      final request = http.MultipartRequest(
+        'PUT',
+        Uri.parse('$baseUrl/api/user/updateProfile'),
+      );
+
+      // Add token to headers
+      request.headers['Authorization'] = 'Bearer $token';
+
+      // Add text fields
+      data.forEach((key, value) {
+        request.fields[key] = value;
+      });
+
+      // Add image file
+      if (imagePath.isNotEmpty) {
+        request.files.add(
+          await http.MultipartFile.fromPath('profileImage', imagePath),
+        );
+      }
+
+      final streamedResponse = await request.send();
+      final response = await http.Response.fromStream(streamedResponse);
+
+      if (response.statusCode == 200) {
+        final responseData = jsonDecode(response.body);
+        return {
+          'status': 200,
+          'message': responseData['msg'],
+          'data': responseData['data'],
+        };
+      } else {
+        final errorData = jsonDecode(response.body);
+        return {
+          'status': response.statusCode,
+          'message': errorData['msg'] ?? 'Something went wrong',
+        };
+      }
+    } catch (e) {
+      print('Error: $e');
+      return {'status': 500, 'message': 'Server error: ${e.toString()}'};
+    }
+  }
 }
