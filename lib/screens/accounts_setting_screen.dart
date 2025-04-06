@@ -3,6 +3,7 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:moto_mitra/screens/change_password_screen.dart';
 import 'package:moto_mitra/services/auth_service.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:url_launcher/url_launcher_string.dart';
 import 'signin_screen.dart';
 import 'main_screen.dart';
 import 'profile_screen.dart';
@@ -118,18 +119,22 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
 
   Future<void> _launchCall(String number) async {
     try {
-      final Uri uri = Uri.parse('tel:$number');
-      if (await canLaunchUrl(uri)) {
-        await launchUrl(uri);
-      } else {
-        final String telUrl = 'tel:$number';
-        if (await canLaunch(telUrl)) {
-          await launch(telUrl);
-        }
+      final String cleanNumber = number.replaceAll(RegExp(r'[^\d+]'), '');
+      final Uri uri = Uri.parse('tel:$cleanNumber');
+
+      final bool launched = await launchUrl(
+        uri,
+        mode: LaunchMode.platformDefault,
+      );
+
+      if (!launched) {
+        if (!mounted) return;
+        _showSnackBar(
+            "Failed to open dialer. Please call $cleanNumber manually.");
       }
     } catch (e) {
       if (!mounted) return;
-      _showSnackBar("Could not initiate call");
+      _showSnackBar("Could not open phone dialer: ${e.toString()}");
     }
   }
 
