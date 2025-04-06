@@ -26,6 +26,8 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
   late String userName;
   String? userImage;
   final String baseUrl = dotenv.env['baseurl'] ?? 'http://localhost:8000';
+  // Add timestamp for cache busting
+  int _imageTimestamp = DateTime.now().millisecondsSinceEpoch;
 
   @override
   void initState() {
@@ -40,10 +42,14 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
       final response = await AuthService.getProfile();
       if (response['status'] == 200 && mounted) {
         final userData = response['data'];
+
+        // Update timestamp for cache busting
+        _imageTimestamp = DateTime.now().millisecondsSinceEpoch;
+
         setState(() {
           userName = userData['username'] ?? '';
           userImage = userData['profileImage'] != null
-              ? '$baseUrl/${userData['profileImage']}'
+              ? '$baseUrl/${userData['profileImage']}?t=$_imageTimestamp'
               : null;
         });
       }
@@ -62,6 +68,8 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
 
   Future<void> _logout() async {
     try {
+      await AuthService.logout(); // Make sure to actually call logout
+
       if (!mounted) return;
 
       _showSnackBar("Logged out successfully");
@@ -218,7 +226,6 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
                 ),
               ),
               const SizedBox(height: 40),
-              // Rest of your UI remains the same
               _buildSettingOption(
                 'Profile',
                 Icons.person_outline,

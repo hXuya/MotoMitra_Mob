@@ -19,6 +19,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
   bool _isUpdating = false;
   String? _userImage;
   File? _imageFile;
+  // Add a timestamp for cache busting
+  int _imageTimestamp = DateTime.now().millisecondsSinceEpoch;
 
   final TextEditingController _usernameController = TextEditingController();
   final TextEditingController _emailController = TextEditingController();
@@ -42,8 +44,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
           _emailController.text = userData['email'] ?? '';
           _phoneController.text = userData['phone'] ?? '';
           _addressController.text = userData['address'] ?? '';
+
+          // Update timestamp for cache busting
+          _imageTimestamp = DateTime.now().millisecondsSinceEpoch;
+
+          // Add timestamp parameter to image URL
           _userImage = userData['profileImage'] != null
-              ? '$baseUrl/${userData['profileImage']}'
+              ? '$baseUrl/${userData['profileImage']}?t=$_imageTimestamp'
               : null;
           _isLoading = false;
         });
@@ -77,6 +84,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
       if (response['status'] == 200 && mounted) {
         _showSnackBar("Profile updated successfully");
+        // Force image cache refresh by regenerating timestamp
+        setState(() {
+          _imageTimestamp = DateTime.now().millisecondsSinceEpoch;
+        });
         _fetchUserProfile();
       } else {
         _showSnackBar("Failed to update profile: ${response['message']}");
