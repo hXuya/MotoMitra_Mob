@@ -39,3 +39,9 @@ flutter:
     - assets/.env
     - assets/icons/
     - assets/images/
+
+  fonts:
+    - family: MyFlutterApp
+      fonts:
+        - asset: assets/icons/MyFlutterApp.ttf
+

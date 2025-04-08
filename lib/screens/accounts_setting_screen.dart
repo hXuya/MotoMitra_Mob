@@ -5,6 +5,7 @@ import 'package:url_launcher/url_launcher.dart';
 import 'signin_screen.dart';
 import 'main_screen.dart';
 import 'profile_screen.dart';
+import 'my_vehicle_screen.dart';
 
 class AccountSettingsScreen extends StatefulWidget {
   final String userName;
@@ -240,7 +241,13 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
                     _buildSettingOption(
                       'My Vehicle',
                       Icons.directions_car_outlined,
-                      () => _showSnackBar("Navigating to vehicle settings"),
+                      () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                              builder: (_) => const MyVehicleScreen()),
+                        );
+                      },
                     ),
                     const SizedBox(height: 16),
                     _buildSettingOption(
