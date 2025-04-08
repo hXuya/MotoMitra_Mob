@@ -1,9 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:moto_mitra/screens/change_password_screen.dart';
 import 'package:moto_mitra/services/auth_service.dart';
 import 'package:url_launcher/url_launcher.dart';
-import 'package:url_launcher/url_launcher_string.dart';
 import 'signin_screen.dart';
 import 'main_screen.dart';
 import 'profile_screen.dart';
@@ -25,9 +23,8 @@ class AccountSettingsScreen extends StatefulWidget {
 class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
   late String userName;
   String? userImage;
-  final String baseUrl = dotenv.env['baseurl'] ?? 'http://localhost:8000';
-  // Add timestamp for cache busting
-  int _imageTimestamp = DateTime.now().millisecondsSinceEpoch;
+  bool _isLoading = false;
+  String _imageTimestamp = DateTime.now().millisecondsSinceEpoch.toString();
 
   @override
   void initState() {
@@ -38,23 +35,23 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
   }
 
   Future<void> _fetchUserProfile() async {
+    setState(() => _isLoading = true);
     try {
       final response = await AuthService.getProfile();
+
       if (response['status'] == 200 && mounted) {
         final userData = response['data'];
-
-        // Update timestamp for cache busting
-        _imageTimestamp = DateTime.now().millisecondsSinceEpoch;
-
         setState(() {
           userName = userData['username'] ?? '';
-          userImage = userData['profileImage'] != null
-              ? '$baseUrl/${userData['profileImage']}?t=$_imageTimestamp'
-              : null;
+          userImage =
+              AuthService.formatProfileImageUrl(userData['profileImage']);
+          _imageTimestamp = DateTime.now().millisecondsSinceEpoch.toString();
+          _isLoading = false;
         });
       }
     } catch (e) {
       if (mounted) {
+        setState(() => _isLoading = false);
         _showSnackBar("Failed to load profile: ${e.toString()}");
       }
     }
@@ -68,11 +65,9 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
 
   Future<void> _logout() async {
     try {
-      await AuthService.logout(); // Make sure to actually call logout
-
+      await AuthService.logout();
       if (!mounted) return;
 
-      _showSnackBar("Logged out successfully");
       Navigator.pushAndRemoveUntil(
         context,
         MaterialPageRoute(builder: (_) => const SignInScreen()),
@@ -84,11 +79,7 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
     }
   }
 
-  Future<void> _callEmergencySupport() async {
-    _showEmergencyDialog();
-  }
-
-  void _showEmergencyDialog() {
+  void _callEmergencySupport() {
     const String emergencyNumber = '+9779765313984';
 
     showDialog(
@@ -135,14 +126,14 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
         mode: LaunchMode.platformDefault,
       );
 
-      if (!launched) {
-        if (!mounted) return;
+      if (!launched && mounted) {
         _showSnackBar(
             "Failed to open dialer. Please call $cleanNumber manually.");
       }
     } catch (e) {
-      if (!mounted) return;
-      _showSnackBar("Could not open phone dialer: ${e.toString()}");
+      if (mounted) {
+        _showSnackBar("Could not open phone dialer: ${e.toString()}");
+      }
     }
   }
 
@@ -197,91 +188,134 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
         ),
         automaticallyImplyLeading: false,
       ),
-      body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              CircleAvatar(
-                radius: 60,
-                backgroundColor: const Color(0xFFFCEFE8),
-                backgroundImage:
-                    userImage != null ? NetworkImage(userImage!) : null,
-                child: userImage == null
-                    ? const Icon(
-                        Icons.person,
-                        size: 60,
-                        color: Color(0xFFE58A00),
-                      )
-                    : null,
-              ),
-              const SizedBox(height: 12),
-              Text(
-                userName,
-                style: const TextStyle(
-                  fontSize: 28,
-                  fontWeight: FontWeight.bold,
-                  color: Color(0xFFFF9900),
+      body: _isLoading
+          ? const Center(
+              child: CircularProgressIndicator(color: Color(0xFFFF9900)),
+            )
+          : SafeArea(
+              child: SingleChildScrollView(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    Container(
+                      width: 120,
+                      height: 120,
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFFCEFE8),
+                        shape: BoxShape.circle,
+                        border: Border.all(
+                          color: const Color(0xFFE8C5AE),
+                          width: 2,
+                        ),
+                      ),
+                      child: ClipOval(
+                        child: _buildProfileImage(),
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    Text(
+                      userName,
+                      style: const TextStyle(
+                        fontSize: 28,
+                        fontWeight: FontWeight.bold,
+                        color: Color(0xFFFF9900),
+                      ),
+                    ),
+                    const SizedBox(height: 40),
+                    _buildSettingOption(
+                      'Profile',
+                      Icons.person_outline,
+                      () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => const ProfileScreen(),
+                          ),
+                        ).then((_) => _fetchUserProfile());
+                      },
+                    ),
+                    const SizedBox(height: 16),
+                    _buildSettingOption(
+                      'My Vehicle',
+                      Icons.directions_car_outlined,
+                      () => _showSnackBar("Navigating to vehicle settings"),
+                    ),
+                    const SizedBox(height: 16),
+                    _buildSettingOption(
+                      'Change Password',
+                      Icons.lock_outline,
+                      () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                              builder: (_) => ChangePasswordScreen()),
+                        );
+                      },
+                    ),
+                    const SizedBox(height: 16),
+                    _buildSettingOption(
+                      'Emergency Support',
+                      Icons.emergency_outlined,
+                      _callEmergencySupport,
+                    ),
+                    const SizedBox(height: 50),
+                    ElevatedButton(
+                      onPressed: _showLogoutConfirmation,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFFFFA800),
+                        minimumSize: const Size.fromHeight(50),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(14),
+                        ),
+                      ),
+                      child: const Text(
+                        'Logout',
+                        style: TextStyle(fontSize: 16, color: Colors.white),
+                      ),
+                    ),
+                  ],
                 ),
               ),
-              const SizedBox(height: 40),
-              _buildSettingOption(
-                'Profile',
-                Icons.person_outline,
-                () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (_) => ProfileScreen()),
-                  ).then((_) {
-                    // Refresh profile data when returning from ProfileScreen
-                    _fetchUserProfile();
-                  });
-                },
-              ),
-              const SizedBox(height: 16),
-              _buildSettingOption(
-                'My Vehicle',
-                Icons.directions_car_outlined,
-                () => _navigateToSection('vehicle'),
-              ),
-              const SizedBox(height: 16),
-              _buildSettingOption(
-                'Change Password',
-                Icons.lock_outline,
-                () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (_) => ChangePasswordScreen()),
-                  );
-                },
-              ),
-              const SizedBox(height: 16),
-              _buildSettingOption(
-                'Emergency Support',
-                Icons.emergency_outlined,
-                _callEmergencySupport,
-              ),
-              const SizedBox(height: 50),
-              ElevatedButton(
-                onPressed: _showLogoutConfirmation,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFFFFA800),
-                  minimumSize: const Size.fromHeight(50),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(14),
-                  ),
-                ),
-                child: const Text(
-                  'Logout',
-                  style: TextStyle(fontSize: 16, color: Colors.white),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
+            ),
     );
+  }
+
+  Widget _buildProfileImage() {
+    if (userImage != null && userImage!.isNotEmpty) {
+      return Image.network(
+        "$userImage?t=$_imageTimestamp",
+        width: 120,
+        height: 120,
+        fit: BoxFit.cover,
+        loadingBuilder: (context, child, loadingProgress) {
+          if (loadingProgress == null) return child;
+          return Center(
+            child: CircularProgressIndicator(
+              value: loadingProgress.expectedTotalBytes != null
+                  ? loadingProgress.cumulativeBytesLoaded /
+                      loadingProgress.expectedTotalBytes!
+                  : null,
+              color: const Color(0xFFFF9900),
+            ),
+          );
+        },
+        errorBuilder: (context, error, stackTrace) {
+          return const Icon(
+            Icons.person,
+            size: 60,
+            color: Color(0xFFE58A00),
+          );
+        },
+      );
+    } else {
+      return const Icon(
+        Icons.person,
+        size: 60,
+        color: Color(0xFFE58A00),
+      );
+    }
   }
 
   void _showLogoutConfirmation() {
@@ -317,9 +351,5 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
         );
       },
     );
-  }
-
-  void _navigateToSection(String section) {
-    _showSnackBar("Navigating to $section settings");
   }
 }

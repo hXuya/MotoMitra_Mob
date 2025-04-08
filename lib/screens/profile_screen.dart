@@ -1,6 +1,5 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:moto_mitra/services/auth_service.dart';
 
@@ -12,15 +11,13 @@ class ProfileScreen extends StatefulWidget {
 }
 
 class _ProfileScreenState extends State<ProfileScreen> {
-  final String baseUrl = dotenv.env['baseurl'] ?? 'http://localhost:8000';
   final _formKey = GlobalKey<FormState>();
 
   bool _isLoading = true;
   bool _isUpdating = false;
   String? _userImage;
   File? _imageFile;
-  // Add a timestamp for cache busting
-  int _imageTimestamp = DateTime.now().millisecondsSinceEpoch;
+  String _imageTimestamp = DateTime.now().millisecondsSinceEpoch.toString();
 
   final TextEditingController _usernameController = TextEditingController();
   final TextEditingController _emailController = TextEditingController();
@@ -37,6 +34,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     setState(() => _isLoading = true);
     try {
       final response = await AuthService.getProfile();
+
       if (response['status'] == 200 && mounted) {
         final userData = response['data'];
         setState(() {
@@ -44,14 +42,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
           _emailController.text = userData['email'] ?? '';
           _phoneController.text = userData['phone'] ?? '';
           _addressController.text = userData['address'] ?? '';
-
-          // Update timestamp for cache busting
-          _imageTimestamp = DateTime.now().millisecondsSinceEpoch;
-
-          // Add timestamp parameter to image URL
-          _userImage = userData['profileImage'] != null
-              ? '$baseUrl/${userData['profileImage']}?t=$_imageTimestamp'
-              : null;
+          _userImage =
+              AuthService.formatProfileImageUrl(userData['profileImage']);
           _isLoading = false;
         });
       }
@@ -83,12 +75,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
       }
 
       if (response['status'] == 200 && mounted) {
-        _showSnackBar("Profile updated successfully");
-        // Force image cache refresh by regenerating timestamp
         setState(() {
-          _imageTimestamp = DateTime.now().millisecondsSinceEpoch;
+          _imageFile = null;
+          _imageTimestamp = DateTime.now().millisecondsSinceEpoch.toString();
         });
-        _fetchUserProfile();
+        _showSnackBar("Profile updated successfully");
+        await _fetchUserProfile();
       } else {
         _showSnackBar("Failed to update profile: ${response['message']}");
       }
@@ -106,12 +98,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
   Future<void> _pickImage() async {
     try {
       final ImagePicker picker = ImagePicker();
-      final XFile? image = await picker.pickImage(source: ImageSource.gallery);
+      final XFile? image = await picker.pickImage(
+        source: ImageSource.gallery,
+        imageQuality: 80,
+      );
 
       if (image != null && mounted) {
-        setState(() {
-          _imageFile = File(image.path);
-        });
+        setState(() => _imageFile = File(image.path));
       }
     } catch (e) {
       _showSnackBar("Failed to pick image: ${e.toString()}");
@@ -152,21 +145,20 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         onTap: _pickImage,
                         child: Stack(
                           children: [
-                            CircleAvatar(
-                              radius: 60,
-                              backgroundColor: const Color(0xFFFCEFE8),
-                              backgroundImage: _imageFile != null
-                                  ? FileImage(_imageFile!)
-                                  : _userImage != null
-                                      ? NetworkImage(_userImage!)
-                                      : null,
-                              child: (_imageFile == null && _userImage == null)
-                                  ? const Icon(
-                                      Icons.person,
-                                      size: 60,
-                                      color: Color(0xFFE58A00),
-                                    )
-                                  : null,
+                            Container(
+                              width: 120,
+                              height: 120,
+                              decoration: BoxDecoration(
+                                color: const Color(0xFFFCEFE8),
+                                shape: BoxShape.circle,
+                                border: Border.all(
+                                  color: const Color(0xFFE8C5AE),
+                                  width: 2,
+                                ),
+                              ),
+                              child: ClipOval(
+                                child: _buildProfileImage(),
+                              ),
                             ),
                             Positioned(
                               bottom: 0,
@@ -278,6 +270,49 @@ class _ProfileScreenState extends State<ProfileScreen> {
               ),
             ),
     );
+  }
+
+  Widget _buildProfileImage() {
+    if (_imageFile != null) {
+      return Image.file(
+        _imageFile!,
+        width: 120,
+        height: 120,
+        fit: BoxFit.cover,
+      );
+    } else if (_userImage != null && _userImage!.isNotEmpty) {
+      return Image.network(
+        "$_userImage?t=$_imageTimestamp",
+        width: 120,
+        height: 120,
+        fit: BoxFit.cover,
+        loadingBuilder: (context, child, loadingProgress) {
+          if (loadingProgress == null) return child;
+          return Center(
+            child: CircularProgressIndicator(
+              value: loadingProgress.expectedTotalBytes != null
+                  ? loadingProgress.cumulativeBytesLoaded /
+                      loadingProgress.expectedTotalBytes!
+                  : null,
+              color: const Color(0xFFFF9900),
+            ),
+          );
+        },
+        errorBuilder: (context, error, stackTrace) {
+          return const Icon(
+            Icons.person,
+            size: 60,
+            color: Color(0xFFE58A00),
+          );
+        },
+      );
+    } else {
+      return const Icon(
+        Icons.person,
+        size: 60,
+        color: Color(0xFFE58A00),
+      );
+    }
   }
 
   Widget _buildTextField({

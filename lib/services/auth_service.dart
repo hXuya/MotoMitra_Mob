@@ -8,7 +8,26 @@ class AuthService {
   static final String baseUrl =
       dotenv.env['baseurl'] ?? 'http://localhost:8000';
 
-  // Login user
+  static String? formatProfileImageUrl(String? profileImage) {
+    if (profileImage == null || profileImage.isEmpty) return null;
+
+    if (profileImage.startsWith('http://') ||
+        profileImage.startsWith('https://')) {
+      return profileImage;
+    }
+
+    String cleanPath = profileImage;
+    if (cleanPath.startsWith('/')) {
+      cleanPath = cleanPath.substring(1);
+    }
+
+    if (cleanPath.startsWith('images/')) {
+      return '$baseUrl/$cleanPath';
+    } else {
+      return '$baseUrl/images/$cleanPath';
+    }
+  }
+
   static Future<Map<String, dynamic>> loginUser(
       String identifier, String password) async {
     try {
@@ -37,12 +56,10 @@ class AuthService {
         };
       }
     } catch (e) {
-      print('Error: $e');
       return {'status': 500, 'message': 'Server error'};
     }
   }
 
-  // Fetch user profile
   static Future<Map<String, dynamic>> getProfile() async {
     try {
       final token = await getToken();
@@ -73,27 +90,22 @@ class AuthService {
         };
       }
     } catch (e) {
-      print('Error: $e');
       return {'status': 500, 'message': 'Server error'};
     }
   }
 
-  // Store token
   static Future<void> storeToken(String token) async {
     await _storage.write(key: 'token', value: token);
   }
 
-  // Get token
   static Future<String?> getToken() async {
     return await _storage.read(key: 'token');
   }
 
-  // Logout
   static Future<void> logout() async {
     await _storage.delete(key: 'token');
   }
 
-  // Change Password
   static Future<Map<String, dynamic>> changePassword({
     required String oldPassword,
     required String newPassword,
@@ -119,7 +131,6 @@ class AuthService {
       );
 
       final data = jsonDecode(response.body);
-
       return {
         'status': response.statusCode,
         'msg': data['msg'] ?? 'Unknown response',
@@ -129,7 +140,6 @@ class AuthService {
     }
   }
 
-  // Update profile without image
   static Future<Map<String, dynamic>> updateProfile(
       Map<String, String> data) async {
     try {
@@ -162,12 +172,10 @@ class AuthService {
         };
       }
     } catch (e) {
-      print('Error: $e');
       return {'status': 500, 'message': 'Server error'};
     }
   }
 
-  // Update profile with image
   static Future<Map<String, dynamic>> updateProfileWithImage(
     Map<String, String> data,
     String imagePath,
@@ -183,15 +191,12 @@ class AuthService {
         Uri.parse('$baseUrl/api/user/updateProfile'),
       );
 
-      // Add token to headers
       request.headers['Authorization'] = 'Bearer $token';
 
-      // Add text fields
       data.forEach((key, value) {
         request.fields[key] = value;
       });
 
-      // Add image file
       if (imagePath.isNotEmpty) {
         request.files.add(
           await http.MultipartFile.fromPath('profileImage', imagePath),
@@ -216,7 +221,6 @@ class AuthService {
         };
       }
     } catch (e) {
-      print('Error: $e');
       return {'status': 500, 'message': 'Server error: ${e.toString()}'};
     }
   }
