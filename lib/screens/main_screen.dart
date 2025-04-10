@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:moto_mitra/screens/accounts_setting_screen.dart';
+import 'package:moto_mitra/screens/nearby_garages_screen.dart'; // Make sure the path is correct
 
 class MainScreen extends StatefulWidget {
   @override
@@ -8,7 +9,7 @@ class MainScreen extends StatefulWidget {
 }
 
 class _MainScreenState extends State<MainScreen> {
-  int _selectedIndex = 1; // Default to Nearby Garages (index 1)
+  int _selectedIndex = 1; // Default to Nearby Garages
 
   @override
   Widget build(BuildContext context) {
@@ -105,7 +106,6 @@ class _MainScreenState extends State<MainScreen> {
   }
 
   Widget _buildMyServicesScreen() {
-    // TODO: Replace with navigation to MyServicesScreen when created
     return Center(
       child: Text(
         'My Services',
@@ -119,21 +119,10 @@ class _MainScreenState extends State<MainScreen> {
   }
 
   Widget _buildNearbyGaragesScreen() {
-    // TODO: Replace with navigation to NearbyGaragesScreen when created
-    return Center(
-      child: Text(
-        'Nearby Garages',
-        style: GoogleFonts.poppins(
-          fontSize: 18,
-          fontWeight: FontWeight.bold,
-          color: Color(0xFFE15E3B),
-        ),
-      ),
-    );
+    return NearbyGaragesScreen(); // Fully integrated screen
   }
 
   Widget _buildHistoryScreen() {
-    // TODO: Replace with navigation to HistoryScreen when created
     return Center(
       child: Text(
         'History',
