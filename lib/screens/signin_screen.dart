@@ -33,7 +33,7 @@ class _SignInScreenState extends State<SignInScreen> {
       await AuthService.storeToken(result['token']);
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(builder: (context) => HomeScreen()),
+        MaterialPageRoute(builder: (context) => MainScreen()),
       );
     }
   }

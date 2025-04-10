@@ -184,7 +184,7 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
           icon: const Icon(Icons.arrow_back, color: Color(0xFFFF9900)),
           onPressed: () => Navigator.pushReplacement(
             context,
-            MaterialPageRoute(builder: (_) => HomeScreen()),
+            MaterialPageRoute(builder: (_) => MainScreen()),
           ),
         ),
         automaticallyImplyLeading: false,

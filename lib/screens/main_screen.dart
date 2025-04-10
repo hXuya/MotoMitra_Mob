@@ -2,7 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:moto_mitra/screens/accounts_setting_screen.dart';
 
-class HomeScreen extends StatelessWidget {
+class MainScreen extends StatefulWidget {
+  @override
+  State<MainScreen> createState() => _MainScreenState();
+}
+
+class _MainScreenState extends State<MainScreen> {
+  int _selectedIndex = 1; // Default to Nearby Garages (index 1)
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -43,85 +50,98 @@ class HomeScreen extends StatelessWidget {
           ),
         ],
       ),
-      body: Padding(
-        padding: EdgeInsets.symmetric(horizontal: 16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Icon(Icons.location_on, color: Color(0xFFE15E3B)),
-                SizedBox(width: 4),
-                Text(
-                  'Loktantrik Chowk, Tarkeshwor',
-                  style:
-                      GoogleFonts.poppins(fontSize: 14, color: Colors.black87),
-                ),
-              ],
+      body: _buildBody(),
+      bottomNavigationBar: Container(
+        decoration: BoxDecoration(
+          color: Colors.white,
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black12,
+              blurRadius: 5,
+              spreadRadius: 2,
             ),
-            SizedBox(height: 16),
-            ServiceCard(
-              image: 'assets/images/service1.png',
-              title: 'Vehicle Servicing Appointment',
-              description:
-                  'Book your vehicle service easily for maintenance and repairs.',
+          ],
+        ),
+        child: BottomNavigationBar(
+          backgroundColor: Colors.white,
+          selectedItemColor: Color(0xFFE15E3B),
+          unselectedItemColor: Colors.grey,
+          currentIndex: _selectedIndex,
+          onTap: (index) {
+            setState(() {
+              _selectedIndex = index;
+            });
+          },
+          items: const [
+            BottomNavigationBarItem(
+              icon: Icon(Icons.build_outlined),
+              label: 'My Services',
             ),
-            SizedBox(height: 16),
-            ServiceCard(
-              image: 'assets/images/service2.png',
-              title: 'Vehicle Towing Service',
-              description:
-                  'Request a tow for your vehicle in case of emergency and get it safely transported for repairs.',
+            BottomNavigationBarItem(
+              icon: Icon(Icons.location_on_outlined),
+              label: 'Nearby Garages',
+            ),
+            BottomNavigationBarItem(
+              icon: Icon(Icons.history),
+              label: 'History',
             ),
           ],
         ),
       ),
     );
   }
-}
 
-class ServiceCard extends StatelessWidget {
-  final String image;
-  final String title;
-  final String description;
+  Widget _buildBody() {
+    switch (_selectedIndex) {
+      case 0:
+        return _buildMyServicesScreen();
+      case 1:
+        return _buildNearbyGaragesScreen();
+      case 2:
+        return _buildHistoryScreen();
+      default:
+        return _buildNearbyGaragesScreen();
+    }
+  }
 
-  ServiceCard(
-      {required this.image, required this.title, required this.description});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black12,
-            blurRadius: 5,
-            spreadRadius: 2,
-          ),
-        ],
+  Widget _buildMyServicesScreen() {
+    // TODO: Replace with navigation to MyServicesScreen when created
+    return Center(
+      child: Text(
+        'My Services',
+        style: GoogleFonts.poppins(
+          fontSize: 18,
+          fontWeight: FontWeight.bold,
+          color: Color(0xFFE15E3B),
+        ),
       ),
-      padding: EdgeInsets.all(16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Image.asset(image, height: 120),
-          SizedBox(height: 8),
-          Text(
-            title,
-            style: GoogleFonts.poppins(
-              fontSize: 16,
-              fontWeight: FontWeight.bold,
-              color: Colors.black87,
-            ),
-          ),
-          SizedBox(height: 4),
-          Text(
-            description,
-            style: GoogleFonts.poppins(fontSize: 14, color: Colors.black54),
-          ),
-        ],
+    );
+  }
+
+  Widget _buildNearbyGaragesScreen() {
+    // TODO: Replace with navigation to NearbyGaragesScreen when created
+    return Center(
+      child: Text(
+        'Nearby Garages',
+        style: GoogleFonts.poppins(
+          fontSize: 18,
+          fontWeight: FontWeight.bold,
+          color: Color(0xFFE15E3B),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildHistoryScreen() {
+    // TODO: Replace with navigation to HistoryScreen when created
+    return Center(
+      child: Text(
+        'History',
+        style: GoogleFonts.poppins(
+          fontSize: 18,
+          fontWeight: FontWeight.bold,
+          color: Color(0xFFE15E3B),
+        ),
       ),
     );
   }
