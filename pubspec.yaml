@@ -45,5 +45,4 @@ flutter:
   fonts:
     - family: MyFlutterApp
       fonts:
-        - asset: assets/icons/MyFlutterApp.ttf
-
+        
