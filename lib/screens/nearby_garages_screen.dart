@@ -4,6 +4,7 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:geolocator/geolocator.dart';
 import 'package:geocoding/geocoding.dart';
+import 'garage_reservation_screen.dart';
 
 class NearbyGaragesScreen extends StatefulWidget {
   const NearbyGaragesScreen({super.key});
@@ -140,9 +141,11 @@ class _NearbyGaragesScreenState extends State<NearbyGaragesScreen> {
   }
 
   void _showBookingConfirmation(dynamic garage) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-          content: Text('Booking garage: ${garage['name'] ?? garage['_id']}')),
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => GarageReservationScreen(garage: garage),
+      ),
     );
   }
 
