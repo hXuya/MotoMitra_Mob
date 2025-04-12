@@ -77,7 +77,7 @@ class _GarageReservationScreenState extends State<GarageReservationScreen> {
         data: Theme.of(context).copyWith(
           colorScheme: ColorScheme.light(primary: _primaryColor),
           timePickerTheme: TimePickerThemeData(
-            dayPeriodColor: MaterialStateColor.resolveWith((states) =>
+            dayPeriodColor: WidgetStateColor.resolveWith((states) =>
                 states.contains(MaterialState.selected)
                     ? _primaryColor.withOpacity(0.15)
                     : Colors.transparent),
@@ -104,14 +104,16 @@ class _GarageReservationScreenState extends State<GarageReservationScreen> {
         data: Theme.of(context).copyWith(
           colorScheme: ColorScheme.light(primary: _primaryColor),
           timePickerTheme: TimePickerThemeData(
-            dayPeriodColor: MaterialStateColor.resolveWith((states) =>
-                states.contains(MaterialState.selected)
-                    ? _primaryColor.withOpacity(0.15)
-                    : Colors.transparent),
-            dayPeriodTextColor: MaterialStateColor.resolveWith((states) =>
-                states.contains(MaterialState.selected)
-                    ? _primaryColor
-                    : Colors.black87),
+            dayPeriodColor: WidgetStateColor.resolveWith((states) {
+              return states.contains(WidgetState.selected)
+                  ? _primaryColor.withAlpha(38) // ≈ 15% opacity
+                  : Colors.transparent;
+            }),
+            dayPeriodTextColor: WidgetStateColor.resolveWith((states) {
+              return states.contains(WidgetState.selected)
+                  ? _primaryColor
+                  : Colors.black87;
+            }),
           ),
         ),
         child: child!,
