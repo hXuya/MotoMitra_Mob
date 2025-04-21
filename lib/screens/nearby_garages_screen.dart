@@ -168,7 +168,7 @@ class _NearbyGaragesScreenState extends State<NearbyGaragesScreen> {
                 color: _cardColor,
                 border: Border(
                     bottom: BorderSide(
-                        color: _borderColor.withOpacity(0.6), width: 1)),
+                        color: _borderColor.withAlpha(153), width: 1)),
               ),
               child: Row(
                 children: [
@@ -269,13 +269,14 @@ class _NearbyGaragesScreenState extends State<NearbyGaragesScreen> {
                 color: Colors.white,
                 borderRadius: BorderRadius.circular(14),
                 border:
-                    Border.all(color: _borderColor.withOpacity(0.8), width: 2),
+                    Border.all(color: _borderColor.withAlpha(204), width: 2),
                 boxShadow: [
                   BoxShadow(
-                      color: Colors.black.withOpacity(0.08),
-                      blurRadius: 8,
-                      spreadRadius: 1,
-                      offset: const Offset(0, 3))
+                    color: Colors.black.withAlpha(20), // 0.08 * 255 ≈ 20
+                    blurRadius: 8,
+                    spreadRadius: 1,
+                    offset: const Offset(0, 3),
+                  ),
                 ],
               ),
               child: Column(

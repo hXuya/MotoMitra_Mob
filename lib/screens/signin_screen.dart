@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:moto_mitra/screens/main_screen.dart';
 import 'signup_screen.dart';
-import '../services/auth_service.dart'; // Import the AuthService
+import '../services/auth_service.dart';
+import 'forget_password_screen.dart';
 
 class SignInScreen extends StatefulWidget {
   const SignInScreen({super.key});
@@ -84,7 +85,14 @@ class _SignInScreenState extends State<SignInScreen> {
               Align(
                 alignment: Alignment.centerRight,
                 child: TextButton(
-                  onPressed: () {},
+                  onPressed: () {
+                    // Navigate to the Forget Password screen when clicked
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                          builder: (context) => const ForgetPasswordScreen()),
+                    );
+                  },
                   child: const Text(
                     'Forget Password ?',
                     style: TextStyle(color: Color(0xFFFF5E00)),

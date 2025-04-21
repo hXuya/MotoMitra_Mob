@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:moto_mitra/screens/accounts_setting_screen.dart';
-import 'package:moto_mitra/screens/nearby_garages_screen.dart'; // Make sure the path is correct
+import 'package:moto_mitra/screens/nearby_garages_screen.dart';
+import 'package:moto_mitra/screens/history_screen.dart';
+import 'package:moto_mitra/screens/current_services_screen.dart';
 
 class MainScreen extends StatefulWidget {
   @override
@@ -76,7 +78,7 @@ class _MainScreenState extends State<MainScreen> {
           items: const [
             BottomNavigationBarItem(
               icon: Icon(Icons.build_outlined),
-              label: 'My Services',
+              label: 'Current Services',
             ),
             BottomNavigationBarItem(
               icon: Icon(Icons.location_on_outlined),
@@ -84,7 +86,7 @@ class _MainScreenState extends State<MainScreen> {
             ),
             BottomNavigationBarItem(
               icon: Icon(Icons.history),
-              label: 'History',
+              label: 'Activity',
             ),
           ],
         ),
@@ -95,43 +97,13 @@ class _MainScreenState extends State<MainScreen> {
   Widget _buildBody() {
     switch (_selectedIndex) {
       case 0:
-        return _buildMyServicesScreen();
+        return const CurrentServicesScreen();
       case 1:
-        return _buildNearbyGaragesScreen();
+        return NearbyGaragesScreen();
       case 2:
-        return _buildHistoryScreen();
+        return HistoryScreen();
       default:
-        return _buildNearbyGaragesScreen();
+        return NearbyGaragesScreen();
     }
-  }
-
-  Widget _buildMyServicesScreen() {
-    return Center(
-      child: Text(
-        'My Services',
-        style: GoogleFonts.poppins(
-          fontSize: 18,
-          fontWeight: FontWeight.bold,
-          color: Color(0xFFE15E3B),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildNearbyGaragesScreen() {
-    return NearbyGaragesScreen(); // Fully integrated screen
-  }
-
-  Widget _buildHistoryScreen() {
-    return Center(
-      child: Text(
-        'History',
-        style: GoogleFonts.poppins(
-          fontSize: 18,
-          fontWeight: FontWeight.bold,
-          color: Color(0xFFE15E3B),
-        ),
-      ),
-    );
   }
 }

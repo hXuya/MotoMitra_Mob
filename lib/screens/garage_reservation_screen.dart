@@ -34,8 +34,9 @@ class _GarageReservationScreenState extends State<GarageReservationScreen> {
   }
 
   void _showMsg(String msg) {
-    if (mounted)
+    if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
+    }
   }
 
   Future<void> _fetchUserVehicles() async {
