@@ -20,6 +20,7 @@ class _NearbyGaragesScreenState extends State<NearbyGaragesScreen> {
   double _longitude = 0.0;
   String _locationName = 'Current Location';
   String? _errorMessage;
+  double _searchRadius = 5.0;
 
   final Color _primaryColor = const Color(0xFFFF9900);
   final Color _backgroundColor = const Color(0xFFFDF5F2);
@@ -109,7 +110,7 @@ class _NearbyGaragesScreenState extends State<NearbyGaragesScreen> {
 
       final response = await http.get(
         Uri.parse(
-            '${AuthService.baseUrl}/api/garage/get-nearby-garages?latitude=$_latitude&longitude=$_longitude'),
+            '${AuthService.baseUrl}/api/garage/get-nearby-garages?latitude=$_latitude&longitude=$_longitude&radius=$_searchRadius'),
         headers: {
           'Content-Type': 'application/json',
           'Authorization': 'Bearer $token',
@@ -136,17 +137,9 @@ class _NearbyGaragesScreenState extends State<NearbyGaragesScreen> {
     }
   }
 
-  Future<void> _refreshData() async {
-    await _determinePosition();
-  }
-
-  void _showBookingConfirmation(dynamic garage) {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => GarageReservationScreen(garage: garage),
-      ),
-    );
+  double _calculateDistance(
+      double lat1, double lon1, double lat2, double lon2) {
+    return Geolocator.distanceBetween(lat1, lon1, lat2, lon2) / 1000;
   }
 
   @override
@@ -161,14 +154,12 @@ class _NearbyGaragesScreenState extends State<NearbyGaragesScreen> {
           automaticallyImplyLeading: false,
           flexibleSpace: SafeArea(
             child: Container(
-              margin: EdgeInsets.zero,
               padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
               width: double.infinity,
               decoration: BoxDecoration(
                 color: _cardColor,
-                border: Border(
-                    bottom: BorderSide(
-                        color: _borderColor.withAlpha(153), width: 1)),
+                border:
+                    Border(bottom: BorderSide(color: _borderColor, width: 1)),
               ),
               child: Row(
                 children: [
@@ -188,13 +179,68 @@ class _NearbyGaragesScreenState extends State<NearbyGaragesScreen> {
           ),
         ),
       ),
-      body: _isLoading
-          ? Center(child: CircularProgressIndicator(color: _primaryColor))
-          : _errorMessage != null
-              ? _buildErrorState()
-              : _nearbyGarages.isEmpty
-                  ? _buildEmptyState()
-                  : _buildGarageList(),
+      body: Column(
+        children: [
+          Expanded(
+            child: _isLoading
+                ? Center(child: CircularProgressIndicator(color: _primaryColor))
+                : _errorMessage != null
+                    ? _buildErrorState()
+                    : _nearbyGarages.isEmpty
+                        ? _buildEmptyState()
+                        : _buildGarageList(),
+          ),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+            decoration: BoxDecoration(
+              color: _cardColor,
+              borderRadius: const BorderRadius.only(
+                topLeft: Radius.circular(24),
+                topRight: Radius.circular(24),
+              ),
+              border: Border(
+                top: BorderSide(color: _borderColor, width: 1),
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.05),
+                  offset: const Offset(0, -2),
+                  blurRadius: 4,
+                ),
+              ],
+            ),
+            child: Column(
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    const Text('Search radius:',
+                        style: TextStyle(fontWeight: FontWeight.w500)),
+                    Text('${_searchRadius.round()} km',
+                        style: TextStyle(
+                            fontWeight: FontWeight.bold, color: _primaryColor)),
+                  ],
+                ),
+                SliderTheme(
+                  data: SliderTheme.of(context).copyWith(
+                    activeTrackColor: _primaryColor,
+                    inactiveTrackColor: _borderColor,
+                    thumbColor: _primaryColor,
+                  ),
+                  child: Slider(
+                    value: _searchRadius,
+                    min: 1,
+                    max: 20,
+                    divisions: 19,
+                    onChanged: (value) => setState(() => _searchRadius = value),
+                    onChangeEnd: (_) => _fetchNearbyGarages(),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
     );
   }
 
@@ -222,12 +268,12 @@ class _NearbyGaragesScreenState extends State<NearbyGaragesScreen> {
 
   Widget _buildEmptyState() {
     return RefreshIndicator(
-      onRefresh: _refreshData,
+      onRefresh: _fetchNearbyGarages,
       color: _primaryColor,
       child: ListView(
         children: [
           SizedBox(
-            height: MediaQuery.of(context).size.height * 0.7,
+            height: MediaQuery.of(context).size.height * 0.6,
             child: Center(
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
@@ -240,7 +286,7 @@ class _NearbyGaragesScreenState extends State<NearbyGaragesScreen> {
                           fontSize: 18,
                           fontWeight: FontWeight.bold,
                           color: _primaryColor)),
-                  const Text('Please try again later'),
+                  Text('Try increasing the search radius'),
                 ],
               ),
             ),
@@ -252,62 +298,128 @@ class _NearbyGaragesScreenState extends State<NearbyGaragesScreen> {
 
   Widget _buildGarageList() {
     return RefreshIndicator(
-      onRefresh: _refreshData,
+      onRefresh: _fetchNearbyGarages,
       color: _primaryColor,
       child: ListView.builder(
         padding: const EdgeInsets.all(16),
         itemCount: _nearbyGarages.length,
         itemBuilder: (context, index) {
           final garage = _nearbyGarages[index];
-          final hasTowingService = garage['towing'] == true; // Fixed field name
+          final distance = _calculateDistance(
+            _latitude,
+            _longitude,
+            garage['latitude'] ?? 0.0,
+            garage['longitude'] ?? 0.0,
+          );
+          final rating =
+              garage['rating'] != null ? (garage['rating'] as num).toInt() : 0;
 
           return InkWell(
-            onTap: () => _showBookingConfirmation(garage),
+            onTap: () => Navigator.push(
+              context,
+              MaterialPageRoute(
+                  builder: (_) => GarageReservationScreen(garage: garage)),
+            ),
             child: Container(
-              margin: const EdgeInsets.only(bottom: 24),
+              margin: const EdgeInsets.only(bottom: 20),
               decoration: BoxDecoration(
                 color: Colors.white,
                 borderRadius: BorderRadius.circular(14),
                 border:
-                    Border.all(color: _borderColor.withAlpha(204), width: 2),
+                    Border.all(color: _borderColor.withAlpha(204), width: 1.5),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withAlpha(20), // 0.08 * 255 ≈ 20
-                    blurRadius: 8,
-                    spreadRadius: 1,
-                    offset: const Offset(0, 3),
+                    color: Colors.black.withOpacity(0.05),
+                    blurRadius: 4,
+                    offset: const Offset(0, 2),
                   ),
                 ],
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Container(
-                    height: 160,
-                    decoration: BoxDecoration(
-                      color: _cardColor,
-                      borderRadius: const BorderRadius.only(
-                        topLeft: Radius.circular(12),
-                        topRight: Radius.circular(12),
+                  Stack(
+                    children: [
+                      Container(
+                        height: 160,
+                        decoration: BoxDecoration(
+                          color: _cardColor,
+                          borderRadius: const BorderRadius.only(
+                            topLeft: Radius.circular(12),
+                            topRight: Radius.circular(12),
+                          ),
+                          image: garage['image'] != null
+                              ? DecorationImage(
+                                  image: NetworkImage(
+                                    AuthService.formatProfileImageUrl(
+                                            garage['image']) ??
+                                        '',
+                                  ),
+                                  fit: BoxFit.cover,
+                                )
+                              : null,
+                        ),
+                        child: garage['image'] == null
+                            ? Center(
+                                child: Image.asset('assets/images/garage.png',
+                                    width: 220))
+                            : null,
                       ),
-                      image: garage['image'] != null
-                          ? DecorationImage(
-                              image: NetworkImage(
-                                  AuthService.formatProfileImageUrl(
-                                          garage['image']) ??
-                                      ''),
-                              fit: BoxFit.cover,
-                            )
-                          : null,
-                    ),
-                    child: garage['image'] == null
-                        ? Center(
-                            child: Image.asset('assets/images/garage.png',
-                                width: 220, height: 220))
-                        : null,
+                      Positioned(
+                        top: 8,
+                        right: 8,
+                        child: Row(
+                          children: [
+                            Icon(Icons.star, color: _primaryColor, size: 18),
+                            const SizedBox(width: 2),
+                            Text(
+                              rating.toString(),
+                              style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                color: _primaryColor,
+                                shadows: [
+                                  Shadow(
+                                    color: Colors.white.withOpacity(0.7),
+                                    blurRadius: 2,
+                                    offset: const Offset(0, 0),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      Positioned(
+                        top: 8,
+                        left: 8,
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 6, vertical: 2),
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(10),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withOpacity(0.1),
+                                blurRadius: 2,
+                                offset: const Offset(0, 1),
+                              ),
+                            ],
+                          ),
+                          child: Text(
+                            '${distance.toStringAsFixed(1)} km',
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              color: _iconColor,
+                              fontSize: 13,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
                   Padding(
-                    padding: const EdgeInsets.all(16),
+                    padding: const EdgeInsets.all(12),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
@@ -317,38 +429,49 @@ class _NearbyGaragesScreenState extends State<NearbyGaragesScreen> {
                               child: Text(
                                 garage['name'] ?? 'Unnamed Garage',
                                 style: TextStyle(
-                                    fontSize: 20,
-                                    fontWeight: FontWeight.w700,
-                                    color: _primaryColor),
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.w700,
+                                  color: _primaryColor,
+                                ),
                               ),
                             ),
                             if (garage['openHours'] != null) ...[
                               Icon(Icons.access_time_outlined,
-                                  color: _iconColor, size: 18),
+                                  color: _iconColor, size: 16),
                               const SizedBox(width: 4),
-                              Text(garage['openHours']),
+                              Text(garage['openHours'],
+                                  style: const TextStyle(fontSize: 13)),
                             ],
                           ],
                         ),
-                        const SizedBox(height: 12),
+                        const SizedBox(height: 8),
                         Row(
                           children: [
                             Icon(Icons.location_on_outlined,
-                                color: _iconColor, size: 18),
+                                color: _iconColor, size: 16),
                             const SizedBox(width: 4),
                             Expanded(
                               child: Text(
                                 garage['location'] ?? 'No address',
                                 overflow: TextOverflow.ellipsis,
+                                style: const TextStyle(fontSize: 13),
                               ),
                             ),
-                            const SizedBox(width: 16),
+                            const SizedBox(width: 12),
                             Image.asset('assets/icons/towing.png',
-                                width: 18, height: 18, color: _iconColor),
+                                width: 16, height: 16, color: _iconColor),
                             const SizedBox(width: 4),
-                            Text(hasTowingService
-                                ? '   Avilable'
-                                : ' Unavailable'),
+                            Text(
+                              garage['towing'] == true
+                                  ? 'Available'
+                                  : 'Unavailable',
+                              style: TextStyle(
+                                color: garage['towing'] == true
+                                    ? _primaryColor
+                                    : Colors.grey,
+                                fontSize: 13,
+                              ),
+                            ),
                           ],
                         ),
                       ],
