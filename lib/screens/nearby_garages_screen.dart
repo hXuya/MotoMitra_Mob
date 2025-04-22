@@ -1,9 +1,9 @@
-import 'package:flutter/material.dart';
-import 'package:moto_mitra/services/auth_service.dart';
 import 'dart:convert';
+import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:geolocator/geolocator.dart';
 import 'package:geocoding/geocoding.dart';
+import 'package:moto_mitra/services/auth_service.dart';
 import 'garage_reservation_screen.dart';
 
 class NearbyGaragesScreen extends StatefulWidget {
@@ -15,9 +15,8 @@ class NearbyGaragesScreen extends StatefulWidget {
 
 class _NearbyGaragesScreenState extends State<NearbyGaragesScreen> {
   bool _isLoading = true;
-  List<dynamic> _nearbyGarages = [];
-  double _latitude = 0.0;
-  double _longitude = 0.0;
+  List _nearbyGarages = [];
+  double _latitude = 0.0, _longitude = 0.0;
   String _locationName = 'Current Location';
   String? _errorMessage;
   double _searchRadius = 5.0;
@@ -155,7 +154,6 @@ class _NearbyGaragesScreenState extends State<NearbyGaragesScreen> {
           flexibleSpace: SafeArea(
             child: Container(
               padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
-              width: double.infinity,
               decoration: BoxDecoration(
                 color: _cardColor,
                 border:
@@ -198,12 +196,10 @@ class _NearbyGaragesScreenState extends State<NearbyGaragesScreen> {
                 topLeft: Radius.circular(24),
                 topRight: Radius.circular(24),
               ),
-              border: Border(
-                top: BorderSide(color: _borderColor, width: 1),
-              ),
+              border: Border(bottom: BorderSide(color: _borderColor, width: 1)),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withOpacity(0.05),
+                  color: Colors.black.withAlpha(13),
                   offset: const Offset(0, -2),
                   blurRadius: 4,
                 ),
@@ -321,7 +317,7 @@ class _NearbyGaragesScreenState extends State<NearbyGaragesScreen> {
                   builder: (_) => GarageReservationScreen(garage: garage)),
             ),
             child: Container(
-              margin: const EdgeInsets.only(bottom: 20),
+              margin: const EdgeInsets.only(bottom: 30),
               decoration: BoxDecoration(
                 color: Colors.white,
                 borderRadius: BorderRadius.circular(14),
@@ -329,7 +325,7 @@ class _NearbyGaragesScreenState extends State<NearbyGaragesScreen> {
                     Border.all(color: _borderColor.withAlpha(204), width: 1.5),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.05),
+                    color: Colors.black.withAlpha(13),
                     blurRadius: 4,
                     offset: const Offset(0, 2),
                   ),
@@ -379,7 +375,7 @@ class _NearbyGaragesScreenState extends State<NearbyGaragesScreen> {
                                 color: _primaryColor,
                                 shadows: [
                                   Shadow(
-                                    color: Colors.white.withOpacity(0.7),
+                                    color: Colors.white.withAlpha(178),
                                     blurRadius: 2,
                                     offset: const Offset(0, 0),
                                   ),
@@ -392,28 +388,35 @@ class _NearbyGaragesScreenState extends State<NearbyGaragesScreen> {
                       Positioned(
                         top: 8,
                         left: 8,
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 6, vertical: 2),
-                          decoration: BoxDecoration(
-                            color: Colors.white,
-                            borderRadius: BorderRadius.circular(10),
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.black.withOpacity(0.1),
-                                blurRadius: 2,
-                                offset: const Offset(0, 1),
-                              ),
-                            ],
-                          ),
-                          child: Text(
-                            '${distance.toStringAsFixed(1)} km',
-                            style: TextStyle(
-                              fontWeight: FontWeight.bold,
-                              color: _iconColor,
-                              fontSize: 13,
+                        child: Row(
+                          children: [
+                            Icon(
+                              Icons.directions,
+                              color: _primaryColor,
+                              size: 16,
+                              shadows: [
+                                Shadow(
+                                    color: Colors.white.withAlpha(178),
+                                    blurRadius: 2)
+                              ],
                             ),
-                          ),
+                            const SizedBox(width: 4),
+                            Text(
+                              '${distance.toStringAsFixed(1)} km',
+                              style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                color: _primaryColor,
+                                fontSize: 13,
+                                shadows: [
+                                  Shadow(
+                                    color: Colors.white.withAlpha(178),
+                                    blurRadius: 2,
+                                    offset: const Offset(0, 0),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
                         ),
                       ),
                     ],
